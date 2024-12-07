@@ -5,10 +5,10 @@ namespace LabWork
     // Абстрактний клас: Загальне рівняння
     public abstract class Equation
     {
-        public abstract void SetCoefficients(); // Абстрактний метод для введення коефіцієнтів
-        public abstract void PrintEquation();  // Абстрактний метод для виведення рівняння
-        public abstract bool IsRoot(double x); // Абстрактний метод для перевірки кореня
-        public abstract void FindRoots();      // Абстрактний метод для пошуку коренів
+        public abstract void SetCoefficients(); // Введення коефіцієнтів
+        public abstract void PrintEquation();  // Виведення рівняння
+        public abstract bool IsRoot(double x); // Перевірка, чи є число коренем
+        public abstract void FindRoots();      // Пошук коренів
     }
 
     // Інтерфейс для рівнянь
@@ -23,42 +23,40 @@ namespace LabWork
     // Квадратичне рівняння
     public class QuadraticEquation : Equation, IEquation
     {
-        protected double b2, b1, b0;
+        protected double coeffA, coeffB, coeffC;
 
         public override void SetCoefficients()
         {
             Console.WriteLine("Введіть коефіцієнти для квадратичного рівняння:");
-            Console.Write("b2: ");
-            b2 = Convert.ToDouble(Console.ReadLine());
-            Console.Write("b1: ");
-            b1 = Convert.ToDouble(Console.ReadLine());
-            Console.Write("b0: ");
-            b0 = Convert.ToDouble(Console.ReadLine());
+            coeffA = ReadCoefficient("coeffA (a): ");
+            coeffB = ReadCoefficient("coeffB (b): ");
+            coeffC = ReadCoefficient("coeffC (c): ");
         }
 
         public override void PrintEquation()
         {
-            Console.WriteLine($"Квадратичне рівняння: {b2}x^2 + {b1}x + {b0} = 0");
+            Console.WriteLine($"Квадратичне рівняння: {coeffA}x^2 + {coeffB}x + {coeffC} = 0");
         }
 
         public override bool IsRoot(double x)
         {
-            double result = b2 * x * x + b1 * x + b0;
+            double result = coeffA * x * x + coeffB * x + coeffC;
             return Math.Abs(result) < 1e-6;
         }
 
         public override void FindRoots()
         {
-            double discriminant = b1 * b1 - 4 * b2 * b0;
+            double discriminant = coeffB * coeffB - 4 * coeffA * coeffC;
+
             if (discriminant > 0)
             {
-                double root1 = (-b1 + Math.Sqrt(discriminant)) / (2 * b2);
-                double root2 = (-b1 - Math.Sqrt(discriminant)) / (2 * b2);
+                double root1 = (-coeffB + Math.Sqrt(discriminant)) / (2 * coeffA);
+                double root2 = (-coeffB - Math.Sqrt(discriminant)) / (2 * coeffA);
                 Console.WriteLine($"Два корені: x1 = {root1}, x2 = {root2}");
             }
             else if (Math.Abs(discriminant) < 1e-6)
             {
-                double root = -b1 / (2 * b2);
+                double root = -coeffB / (2 * coeffA);
                 Console.WriteLine($"Один корінь: x = {root}");
             }
             else
@@ -66,40 +64,89 @@ namespace LabWork
                 Console.WriteLine("Рівняння не має дійсних коренів.");
             }
         }
+
+        private double ReadCoefficient(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                if (double.TryParse(Console.ReadLine(), out double value))
+                    return value;
+
+                Console.WriteLine("Помилка: Введіть коректне число.");
+            }
+        }
     }
 
     // Кубічне рівняння
     public class CubicEquation : Equation, IEquation
     {
-        private double a3, a2, a1, a0;
+        private double coeffA, coeffB, coeffC, coeffD;
 
         public override void SetCoefficients()
         {
             Console.WriteLine("Введіть коефіцієнти для кубічного рівняння:");
-            Console.Write("a3: ");
-            a3 = Convert.ToDouble(Console.ReadLine());
-            Console.Write("a2: ");
-            a2 = Convert.ToDouble(Console.ReadLine());
-            Console.Write("a1: ");
-            a1 = Convert.ToDouble(Console.ReadLine());
-            Console.Write("a0: ");
-            a0 = Convert.ToDouble(Console.ReadLine());
+            coeffA = ReadCoefficient("coeffA (a): ");
+            coeffB = ReadCoefficient("coeffB (b): ");
+            coeffC = ReadCoefficient("coeffC (c): ");
+            coeffD = ReadCoefficient("coeffD (d): ");
         }
 
         public override void PrintEquation()
         {
-            Console.WriteLine($"Кубічне рівняння: {a3}x^3 + {a2}x^2 + {a1}x + {a0} = 0");
+            Console.WriteLine($"Кубічне рівняння: {coeffA}x^3 + {coeffB}x^2 + {coeffC}x + {coeffD} = 0");
         }
 
         public override bool IsRoot(double x)
         {
-            double result = a3 * x * x * x + a2 * x * x + a1 * x + a0;
+            double result = coeffA * Math.Pow(x, 3) + coeffB * Math.Pow(x, 2) + coeffC * x + coeffD;
             return Math.Abs(result) < 1e-6;
         }
 
         public override void FindRoots()
         {
-            Console.WriteLine("Пошук коренів для кубічного рівняння потребує спеціального алгоритму.");
+            // Простий чисельний метод (метод Ньютона) для знаходження одного кореня
+            double x0 = 0; // Початкове значення
+            double tolerance = 1e-6;
+            int maxIterations = 100;
+            int iteration = 0;
+
+            while (iteration < maxIterations)
+            {
+                double fx = coeffA * Math.Pow(x0, 3) + coeffB * Math.Pow(x0, 2) + coeffC * x0 + coeffD;
+                double fPrimeX = 3 * coeffA * Math.Pow(x0, 2) + 2 * coeffB * x0 + coeffC;
+
+                if (Math.Abs(fPrimeX) < tolerance)
+                {
+                    Console.WriteLine("Похідна дорівнює нулю. Метод Ньютона не спрацював.");
+                    return;
+                }
+
+                double x1 = x0 - fx / fPrimeX;
+
+                if (Math.Abs(x1 - x0) < tolerance)
+                {
+                    Console.WriteLine($"Знайдено корінь: x = {x1}");
+                    return;
+                }
+
+                x0 = x1;
+                iteration++;
+            }
+
+            Console.WriteLine("Не вдалося знайти корінь за допомогою методу Ньютона.");
+        }
+
+        private double ReadCoefficient(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                if (double.TryParse(Console.ReadLine(), out double value))
+                    return value;
+
+                Console.WriteLine("Помилка: Введіть коректне число.");
+            }
         }
     }
 
@@ -108,25 +155,11 @@ namespace LabWork
     {
         static void Main(string[] args)
         {
-            Equation equation;
+            Equation equation = SelectEquation();
 
-            Console.WriteLine("Виберіть тип рівняння:");
-            Console.WriteLine("1 - Квадратичне рівняння");
-            Console.WriteLine("2 - Кубічне рівняння");
-            Console.Write("Ваш вибір: ");
-            string choice = Console.ReadLine();
-
-            if (choice == "1")
+            if (equation == null)
             {
-                equation = new QuadraticEquation();
-            }
-            else if (choice == "2")
-            {
-                equation = new CubicEquation();
-            }
-            else
-            {
-                Console.WriteLine("Невірний вибір!");
+                Console.WriteLine("Невірний вибір.");
                 return;
             }
 
@@ -135,10 +168,33 @@ namespace LabWork
             equation.FindRoots();
 
             Console.Write("Перевірте чи є число коренем. Введіть x: ");
-            double x = Convert.ToDouble(Console.ReadLine());
-            Console.WriteLine(equation.IsRoot(x)
-                ? $"Число {x} є коренем рівняння."
-                : $"Число {x} не є коренем рівняння.");
+            if (double.TryParse(Console.ReadLine(), out double x))
+            {
+                Console.WriteLine(equation.IsRoot(x)
+                    ? $"Число {x} є коренем рівняння."
+                    : $"Число {x} не є коренем рівняння.");
+            }
+            else
+            {
+                Console.WriteLine("Помилка: Введено некоректне число.");
+            }
+        }
+
+        private static Equation SelectEquation()
+        {
+            Console.WriteLine("Виберіть тип рівняння:");
+            Console.WriteLine("1 - Квадратичне рівняння");
+            Console.WriteLine("2 - Кубічне рівняння");
+            Console.Write("Ваш вибір: ");
+
+            string choice = Console.ReadLine();
+
+            return choice switch
+            {
+                "1" => new QuadraticEquation(),
+                "2" => new CubicEquation(),
+                _ => null
+            };
         }
     }
 }
