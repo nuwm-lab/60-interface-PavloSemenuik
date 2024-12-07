@@ -189,6 +189,7 @@ namespace LabWork
 
             string choice = Console.ReadLine();
 
+
             return choice switch
             {
                 "1" => new QuadraticEquation(),
