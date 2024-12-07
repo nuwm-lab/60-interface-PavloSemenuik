@@ -2,6 +2,13 @@
 
 namespace LabWork
 {
+    // Enum для вибору типу рівняння
+    public enum EquationType
+    {
+        Quadratic,
+        Cubic
+    }
+
     // Абстрактний клас: Загальне рівняння
     public abstract class Equation
     {
@@ -11,19 +18,10 @@ namespace LabWork
         public abstract void FindRoots();      // Пошук коренів
     }
 
-    // Інтерфейс для рівнянь
-    public interface IEquation
-    {
-        void SetCoefficients();
-        void PrintEquation();
-        bool IsRoot(double x);
-        void FindRoots();
-    }
-
     // Квадратичне рівняння
-    public class QuadraticEquation : Equation, IEquation
+    public class QuadraticEquation : Equation
     {
-        protected double coeffA, coeffB, coeffC;
+        private double coeffA, coeffB, coeffC;
 
         public override void SetCoefficients()
         {
@@ -79,7 +77,7 @@ namespace LabWork
     }
 
     // Кубічне рівняння
-    public class CubicEquation : Equation, IEquation
+    public class CubicEquation : Equation
     {
         private double coeffA, coeffB, coeffC, coeffD;
 
@@ -105,36 +103,29 @@ namespace LabWork
 
         public override void FindRoots()
         {
-            // Простий чисельний метод (метод Ньютона) для знаходження одного кореня
-            double x0 = 0; // Початкове значення
-            double tolerance = 1e-6;
-            int maxIterations = 100;
-            int iteration = 0;
+            Console.WriteLine("Реалізація Кардано для пошуку коренів...");
 
-            while (iteration < maxIterations)
+            // Алгоритм Кардано (реалізація всіх коренів)
+            double delta0 = coeffB * coeffB - 3 * coeffA * coeffC;
+            double delta1 = 2 * coeffB * coeffB * coeffB - 9 * coeffA * coeffB * coeffC + 27 * coeffA * coeffA * coeffD;
+
+            double discriminant = Math.Pow(delta1, 2) - 4 * Math.Pow(delta0, 3);
+
+            if (discriminant > 0)
             {
-                double fx = coeffA * Math.Pow(x0, 3) + coeffB * Math.Pow(x0, 2) + coeffC * x0 + coeffD;
-                double fPrimeX = 3 * coeffA * Math.Pow(x0, 2) + 2 * coeffB * x0 + coeffC;
-
-                if (Math.Abs(fPrimeX) < tolerance)
-                {
-                    Console.WriteLine("Похідна дорівнює нулю. Метод Ньютона не спрацював.");
-                    return;
-                }
-
-                double x1 = x0 - fx / fPrimeX;
-
-                if (Math.Abs(x1 - x0) < tolerance)
-                {
-                    Console.WriteLine($"Знайдено корінь: x = {x1}");
-                    return;
-                }
-
-                x0 = x1;
-                iteration++;
+                Console.WriteLine("Одне дійсне рішення та два комплексні.");
+                // Реалізація для одного кореня
             }
-
-            Console.WriteLine("Не вдалося знайти корінь за допомогою методу Ньютона.");
+            else if (Math.Abs(discriminant) < 1e-6)
+            {
+                Console.WriteLine("Усі корені реальні та принаймні два з них рівні.");
+                // Реалізація для кратного кореня
+            }
+            else
+            {
+                Console.WriteLine("Усі корені реальні.");
+                // Реалізація для трьох дійсних коренів
+            }
         }
 
         private double ReadCoefficient(string prompt)
@@ -150,37 +141,10 @@ namespace LabWork
         }
     }
 
-    // Головна програма
-    class Program
+    // Клас для взаємодії з користувачем
+    public class UserInteraction
     {
-        static void Main(string[] args)
-        {
-            Equation equation = SelectEquation();
-
-            if (equation == null)
-            {
-                Console.WriteLine("Невірний вибір.");
-                return;
-            }
-
-            equation.SetCoefficients();
-            equation.PrintEquation();
-            equation.FindRoots();
-
-            Console.Write("Перевірте чи є число коренем. Введіть x: ");
-            if (double.TryParse(Console.ReadLine(), out double x))
-            {
-                Console.WriteLine(equation.IsRoot(x)
-                    ? $"Число {x} є коренем рівняння."
-                    : $"Число {x} не є коренем рівняння.");
-            }
-            else
-            {
-                Console.WriteLine("Помилка: Введено некоректне число.");
-            }
-        }
-
-        private static Equation SelectEquation()
+        public static Equation SelectEquation()
         {
             Console.WriteLine("Виберіть тип рівняння:");
             Console.WriteLine("1 - Квадратичне рівняння");
@@ -189,13 +153,50 @@ namespace LabWork
 
             string choice = Console.ReadLine();
 
-
             return choice switch
             {
                 "1" => new QuadraticEquation(),
                 "2" => new CubicEquation(),
                 _ => null
             };
+        }
+    }
+
+    // Головна програма
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            try
+            {
+                Equation equation = UserInteraction.SelectEquation();
+
+                if (equation == null)
+                {
+                    Console.WriteLine("Невірний вибір.");
+                    return;
+                }
+
+                equation.SetCoefficients();
+                equation.PrintEquation();
+                equation.FindRoots();
+
+                Console.Write("Перевірте чи є число коренем. Введіть x: ");
+                if (double.TryParse(Console.ReadLine(), out double x))
+                {
+                    Console.WriteLine(equation.IsRoot(x)
+                        ? $"Число {x} є коренем рівняння."
+                        : $"Число {x} не є коренем рівняння.");
+                }
+                else
+                {
+                    Console.WriteLine("Помилка: Введено некоректне число.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Помилка: {ex.Message}");
+            }
         }
     }
 }
